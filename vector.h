@@ -37,7 +37,7 @@ class Vector {
     Data = new T[capacity];
   }
 
-  Vector(uint64_t size) {
+  explicit Vector(uint64_t size) {
     this->size = 0;
     this->capacity = size;
     Data = new T[capacity];

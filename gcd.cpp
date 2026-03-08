@@ -1,4 +1,4 @@
-#include <cstdint>
+﻿#include <cstdint>
 #include <fstream>
 #include <iostream>
 
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
   input >> N >> K;
   input.ignore();
 
-  Vector<int64_t> vec(N);
+  Vector<int64_t> vec;
 
   for (int64_t i = 0; i < N; i++) {
     int64_t num = 0;
@@ -51,8 +51,8 @@ int main(int argc, char* argv[]) {
 
   input.close();
 
-  Vector<int64_t> LS(K);
-  Vector<int64_t> RS(K);
+  Vector<int64_t> LS;
+  Vector<int64_t> RS;
 
   int64_t current_sum = 0;
   int64_t fGCD = 0;

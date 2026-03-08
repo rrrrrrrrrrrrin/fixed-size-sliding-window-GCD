@@ -20,23 +20,36 @@ jobs:
     steps:
       - name: Get repository code
         uses: actions/checkout@v4
+      - name: Prepare scripts
+        run: |
+          apt-get update
+          apt-get install -y dos2unix
+          dos2unix ./scripts/*.sh || true
+          chmod 755 ./scripts/*.sh || true
+          ls -la ./scripts || true
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y clang-format cppcheck clang-tidy valgrind cmake build-essential
       - name: Check repository clean
-        run: ./scripts/check_clean.sh
+        run: bash ./scripts/check_clean.sh
       - name: Check requirements
         run: |
-             !(grep -qwRE --include=*.{cc,cpp,h,hpp} '<vector>|<list>|<string>|<algorithm>|<stack>|<queue>|<deque>|<set>|<map>|<bits' ./* ) &&  (echo \"Check - OK\" )  || ( echo \"Forbiden STL containers\" && exit 9 )
+          !(grep -qwRE --include=*.{cc,cpp,h,hpp} '<vector>|<list>|<string>|<algorithm>|<stack>|<queue>|<deque>|<set>|<map>|<bits' ./* ) && (echo "Check - OK") || ( echo "Forbiden STL containers" && exit 9 )
       - name: Check code style
         run: |
-             clang-format --version
-             find "." \( -name '*.cpp' -o -name '*.h*' \) -print0 | xargs -0 clang-format --dry-run --Werror --verbose
+          clang-format --version
+          find "." \( -name '*.cpp' -o -name '*.h*' \) -print0 | xargs -0 clang-format --dry-run --Werror --verbose
+      - name: Clean previous CMake cache
+        run: |
+          rm -rf build
       - name: Code linting
-        uses: amcp-pit/cpp-linter@v1
-        with:
-          extra-args-before: '-xc++'
-          extra-args: '-std=c++20'
-          after-args: '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'
+        run: |
+          mkdir -p build
+          cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cppcheck --enable=all --inconclusive --std=c++20 -i build .
       - name: Build
-        run: ./scripts/build.sh
+        run: bash ./scripts/build.sh
       - name: Test 1
         id: test-1
         uses: classroom-resources/autograding-command-grader@v1
@@ -97,7 +110,7 @@ jobs:
         with:
           test-name: Test 7
           setup-command: ''
-          command: "timeout 1  ./build/gcd tests/test07.in output.txt && cmp output.txt tests/test07.out"
+          command: "timeout 1 ./build/gcd tests/test07.in output.txt && cmp output.txt tests/test07.out"
           timeout: 1
           max-score: 1
       - name: Test 8
@@ -106,7 +119,7 @@ jobs:
         with:
           test-name: Test 8
           setup-command: ''
-          command: "timeout 1  ./build/gcd tests/test08.in output.txt && cmp output.txt tests/test08.out"
+          command: "timeout 1 ./build/gcd tests/test08.in output.txt && cmp output.txt tests/test08.out"
           timeout: 1
           max-score: 1
       - name: Test 9
@@ -115,7 +128,7 @@ jobs:
         with:
           test-name: Test 9
           setup-command: ''
-          command: "timeout 1  ./build/gcd tests/test09.in output.txt && cmp output.txt tests/test09.out"
+          command: "timeout 1 ./build/gcd tests/test09.in output.txt && cmp output.txt tests/test09.out"
           timeout: 1
           max-score: 1
       - name: Test 10
@@ -284,7 +297,7 @@ jobs:
           runners: test-1,test-2,test-3,test-4,test-5,test-6,test-7,test-8,test-9,test-10,test-11,test-12,test-13,test-14,test-15,test-16,test-17,test-18,test-19,test-20,test-21,test-22,test-23,test-24
       - name: Memory leaks
         run: |
-             valgrind --tool=memcheck --leak-check=full --undef-value-errors=no --error-exitcode=111 ./build/gcd tests/test10.in output.txt
+          valgrind --tool=memcheck --leak-check=full --undef-value-errors=no --error-exitcode=111 ./build/gcd tests/test10.in output.txt
       - name: Checkout
         uses: actions/checkout@v4
       - name: CPD
@@ -295,5 +308,5 @@ jobs:
           collection: ${{ github.repository_owner  }}
       - name: Clean
         run: |
-             rm -rf ./* || true
-             rm -rf ./.??* || true
+          rm -rf ./* || true
+          rm -rf ./.??* || true
